@@ -1,0 +1,259 @@
+-- ==================================================
+-- Демоэкзамен: База данных "DemoExam05"
+-- ==================================================
+USE master;
+GO
+
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'DemoExam05')
+BEGIN
+    ALTER DATABASE DemoExam05 SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE DemoExam05;
+END
+GO
+
+CREATE DATABASE DemoExam05 COLLATE Cyrillic_General_CI_AS;
+GO
+
+USE DemoExam05;
+GO
+
+-- ==================================================
+-- 1. Таблица Users
+-- ==================================================
+CREATE TABLE Users (
+    Login NVARCHAR(100) NOT NULL,
+    Role NVARCHAR(50) NOT NULL,
+    FullName NVARCHAR(200) NOT NULL,
+    Password NVARCHAR(100) NOT NULL,
+    CONSTRAINT PK_Users PRIMARY KEY (Login),
+    CONSTRAINT CHK_Users_Role CHECK (Role IN (N'Авторизированный клиент', N'Менеджер', N'Администратор'))
+);
+GO
+
+-- 2. Таблица PickupPoints
+CREATE TABLE PickupPoints (
+    Id INT IDENTITY(1,1) NOT NULL,
+    Address NVARCHAR(500) NOT NULL,
+    CONSTRAINT PK_PickupPoints PRIMARY KEY (Id),
+    CONSTRAINT UQ_PickupPoints_Address UNIQUE (Address)
+);
+GO
+
+-- 3. Таблица Products
+CREATE TABLE Products (
+    Article NVARCHAR(50) NOT NULL,
+    Name NVARCHAR(200) NOT NULL,
+    Unit NVARCHAR(20) NOT NULL,
+    Price DECIMAL(18,2) NOT NULL,
+    Category NVARCHAR(100) NOT NULL,
+    Manufacturer NVARCHAR(100) NOT NULL,
+    Supplier NVARCHAR(100) NOT NULL,
+    Discount INT NOT NULL DEFAULT 0,
+    Quantity INT NOT NULL DEFAULT 0,
+    Description NVARCHAR(MAX) NULL,
+    ImagePath NVARCHAR(500) NULL,
+    CONSTRAINT PK_Products PRIMARY KEY (Article),
+    CONSTRAINT CHK_Products_Price CHECK (Price >= 0),
+    CONSTRAINT CHK_Products_Quantity CHECK (Quantity >= 0),
+    CONSTRAINT CHK_Products_Discount CHECK (Discount BETWEEN 0 AND 100)
+);
+GO
+
+-- 4. Таблица Orders
+CREATE TABLE Orders (
+    Id INT IDENTITY(1,1) NOT NULL,
+    UserLogin NVARCHAR(100) NOT NULL,
+    OrderDate DATETIME NOT NULL,
+    DeliveryDate DATETIME NULL,
+    PickupPointId INT NOT NULL,
+    Status NVARCHAR(50) NOT NULL,
+    PickupCode NVARCHAR(50) NOT NULL,
+    ProductArticle NVARCHAR(50) NOT NULL,
+    Quantity INT NOT NULL,
+    CONSTRAINT PK_Orders PRIMARY KEY (Id),
+    CONSTRAINT FK_Orders_Users FOREIGN KEY (UserLogin) REFERENCES Users(Login),
+    CONSTRAINT FK_Orders_PickupPoints FOREIGN KEY (PickupPointId) REFERENCES PickupPoints(Id),
+    CONSTRAINT FK_Orders_Products FOREIGN KEY (ProductArticle) REFERENCES Products(Article),
+    CONSTRAINT CHK_Orders_Quantity CHECK (Quantity > 0)
+);
+GO
+
+-- ==================================================
+-- 5. Импорт данных
+-- ==================================================
+
+-- 5.1 Пользователи
+INSERT INTO Users (Login, Role, FullName, Password) VALUES
+(N'94d5ous@gmail.com', N'Администратор', N'Ворсин Петр Евгеньевич', N'uzWC67'),
+(N'uth4iz@mail.com', N'Администратор', N'Старикова Елена Павловна', N'2L6KZG'),
+(N'yzls62@outlook.com', N'Администратор', N'Одинцов Серафим Артёмович', N'JlFRCZ'),
+(N'1diph5e@tutanota.com', N'Менеджер', N'Степанов Михаил Артёмович', N'8ntwUp'),
+(N'tjde7c@yahoo.com', N'Менеджер', N'Ворсин Петр Евгеньевич', N'YOyhfR'),
+(N'wpmrc3do@tutanota.com', N'Менеджер', N'Старикова Елена Павловна', N'RSbvHv'),
+(N'5d4zbu@tutanota.com', N'Авторизированный клиент', N'Михайлюк Анна Вячеславовна', N'rwVDh9'),
+(N'ptec8ym@yahoo.com', N'Авторизированный клиент', N'Ситдикова Елена Анатольевна', N'LdNyos'),
+(N'1qz4kw@mail.com', N'Авторизированный клиент', N'Никифорова Весения Николаевна', N'gynQMT'),
+(N'4np6se@mail.com', N'Авторизированный клиент', N'Сазонов Руслан Германович', N'AtnDjr');
+GO
+
+-- 5.2 Пункты выдачи
+INSERT INTO PickupPoints (Address) VALUES
+(N'420151, г. Лесной, ул. Вишневая, 32'),
+(N'125061, г. Лесной, ул. Подгорная, 8'),
+(N'630370, г. Лесной, ул. Шоссейная, 24'),
+(N'400562, г. Лесной, ул. Зеленая, 32'),
+(N'614510, г. Лесной, ул. Маяковского, 47'),
+(N'410542, г. Лесной, ул. Светлая, 46'),
+(N'620839, г. Лесной, ул. Цветочная, 8'),
+(N'443890, г. Лесной, ул. Коммунистическая, 1'),
+(N'603379, г. Лесной, ул. Спортивная, 46'),
+(N'603721, г. Лесной, ул. Гоголя, 41'),
+(N'410172, г. Лесной, ул. Северная, 13'),
+(N'614611, г. Лесной, ул. Молодежная, 50'),
+(N'454311, г.Лесной, ул. Новая, 19'),
+(N'660007, г.Лесной, ул. Октябрьская, 19'),
+(N'603036, г. Лесной, ул. Садовая, 4'),
+(N'394060, г.Лесной, ул. Фрунзе, 43'),
+(N'410661, г. Лесной, ул. Школьная, 50'),
+(N'625590, г. Лесной, ул. Коммунистическая, 20'),
+(N'625683, г. Лесной, ул. 8 Марта'),
+(N'450983, г.Лесной, ул. Комсомольская, 26'),
+(N'394782, г. Лесной, ул. Чехова, 3'),
+(N'603002, г. Лесной, ул. Дзержинского, 28'),
+(N'450558, г. Лесной, ул. Набережная, 30'),
+(N'344288, г. Лесной, ул. Чехова, 1'),
+(N'614164, г.Лесной,  ул. Степная, 30'),
+(N'394242, г. Лесной, ул. Коммунистическая, 43'),
+(N'660540, г. Лесной, ул. Солнечная, 25'),
+(N'125837, г. Лесной, ул. Шоссейная, 40'),
+(N'125703, г. Лесной, ул. Партизанская, 49'),
+(N'625283, г. Лесной, ул. Победы, 46'),
+(N'614753, г. Лесной, ул. Полевая, 35'),
+(N'426030, г. Лесной, ул. Маяковского, 44'),
+(N'450375, г. Лесной ул. Клубная, 44'),
+(N'625560, г. Лесной, ул. Некрасова, 12'),
+(N'630201, г. Лесной, ул. Комсомольская, 17'),
+(N'190949, г. Лесной, ул. Мичурина, 26');
+GO
+
+-- 5.3 Товары
+INSERT INTO Products (Article, Name, Unit, Price, Supplier, Manufacturer, Category, Discount, Quantity, Description, ImagePath) VALUES
+(N'PMEZMH', N'Цемент', N'шт.', 440, N'М500', N'М500', N'Общестроительные материалы', 8, 34, N'Цемент Евроцемент М500 Д0 ЦЕМ I 42,5 50 кг', N'Images/PMEZMH.jpg'),
+(N'BPV4MM', N'Пленка техническая', N'шт.', 8, N'Изостронг', N'Изостронг', N'Общестроительные материалы', 8, 2, N'Пленка техническая полиэтиленовая Изостронг 60 мк 3 м рукав 1,5 м, пог.м', N'Images/BPV4MM.jpg'),
+(N'JVL42J', N'Пленка техническая', N'шт.', 13, N'Изостронг', N'Изостронг', N'Общестроительные материалы', 4, 34, N'Пленка техническая полиэтиленовая Изостронг 100 мк 3 м рукав 1,5 м, пог.м', N'Images/JVL42J.jpg'),
+(N'F895RB', N'Песок строительный', N'шт.', 102, N'Knauf', N'Knauf', N'Общестроительные материалы', 6, 7, N'Песок строительный 50 кг', N'Images/F895RB.jpg'),
+(N'3XBOTN', N'Керамзит фракция', N'шт.', 110, N'MixMaster', N'MixMaster', N'Общестроительные материалы', 5, 21, N'Керамзит фракция 10-20 мм 0,05 куб.м', N'Images/3XBOTN.jpg'),
+(N'3L7RCZ', N'Газобетон', N'шт.', 7400, N'ЛСР', N'ЛСР', N'Стеновые и фасадные материалы', 2, 20, N'Газобетон ЛСР 100х250х625 мм D400', N'Images/3L7RCZ.jpg'),
+(N'S72AM3', N'Пазогребневая плита', N'шт.', 500, N'ВОЛМА', N'ВОЛМА', N'Стеновые и фасадные материалы', 5, 35, N'Пазогребневая плита ВОЛМА Гидро 667х500х80 мм полнотелая', N'Images/S72AM3.jpg'),
+(N'2G3280', N'Угол наружный', N'шт.', 795, N'Vinylon', N'Vinylon', N'Стеновые и фасадные материалы', 9, 20, N'Угол наружный Vinylon 3050 мм серо-голубой', N'Images/2G3280.jpg'),
+(N'MIO8YV', N'Кирпич', N'шт.', 30, N'ВОЛМА', N'ВОЛМА', N'Стеновые и фасадные материалы', 9, 31, N'Кирпич рядовой Боровичи полнотелый М150 250х120х65 мм 1NF', N'Images/MIO8YV.jpg'),
+(N'UER2QD', N'Скоба для пазогребневой плиты', N'шт.', 25, N'Knauf', N'Knauf', N'Стеновые и фасадные материалы', 8, 27, N'Скоба для пазогребневой плиты Knauf С1 120х100 мм', N'Images/UER2QD.jpg'),
+(N'ZR70B4', N'Кирпич', N'шт.', 16, N'Павловский завод', N'Павловский завод', N'Стеновые и фасадные материалы', 3, 0, N'Кирпич рядовой силикатный Павловский завод полнотелый М200 250х120х65 мм 1NF', NULL),
+(N'LPDDM4', N'Штукатурка гипсовая', N'шт.', 500, N'Knauf', N'Knauf', N'Сухие строительные смеси и гидроизоляция', 6, 38, N'Штукатурка гипсовая Knauf Ротбанд 30 кг', NULL),
+(N'LQ48MW', N'Штукатурка гипсовая', N'шт.', 462, N'Weber', N'Weber', N'Сухие строительные смеси и гидроизоляция', 6, 33, N'Штукатурка гипсовая Knauf МП-75 машинная 30 кг', NULL),
+(N'O43COU', N'Шпаклевка', N'шт.', 750, N'ВОЛМА', N'ВОЛМА', N'Сухие строительные смеси и гидроизоляция', 1, 16, N'Шпаклевка полимерная Weber.vetonit LR + для сухих помещений белая 20 кг', NULL),
+(N'M26EXW', N'Клей для плитки, керамогранита и камня', N'шт.', 340, N'Knauf', N'Knauf', N'Сухие строительные смеси и гидроизоляция', 8, 0, N'Клей для плитки, керамогранита и камня Крепс Усиленный серый (класс С1) 25 кг', NULL),
+(N'K0YACK', N'Смесь цементно-песчаная', N'шт.', 160, N'MixMaster', N'MixMaster', N'Сухие строительные смеси и гидроизоляция', 8, 19, N'Смесь цементно-песчаная (ЦПС) 300 по ТУ MixMaster Универсал 25 кг', NULL),
+(N'ASPXSG', N'Ровнитель', N'шт.', 711, N'Weber', N'Weber', N'Сухие строительные смеси и гидроизоляция', 10, 20, N'Ровнитель (наливной пол) финишный Weber.vetonit 4100 самовыравнивающийся высокопрочный 20 кг', NULL),
+(N'ZKQ5FF', N'Лезвие для ножа', N'шт.', 65, N'Hesler', N'Hesler', N'Ручной инструмент', 6, 6, N'Лезвие для ножа Hesler 18 мм прямое (10 шт.)', NULL),
+(N'4WZEOT', N'Лезвие для ножа', N'шт.', 110, N'Armero', N'Armero', N'Ручной инструмент', 6, 17, N'Лезвие для ножа Armero 18 мм прямое (10 шт.)', NULL),
+(N'4JR1HN', N'Шпатель', N'шт.', 26, N'Hesler', N'Hesler', N'Ручной инструмент', 6, 7, N'Шпатель малярный 100 мм с пластиковой ручкой', NULL),
+(N'Z3XFSP', N'Нож строительный', N'шт.', 63, N'Hesler', N'Hesler', N'Ручной инструмент', 8, 5, N'Нож строительный Hesler 18 мм с ломающимся лезвием пластиковый корпус', NULL),
+(N'I6MH89', N'Валик', N'шт.', 326, N'Wenzo Roma', N'Wenzo Roma', N'Ручной инструмент', 12, 3, N'Валик Wenzo Roma полиакрил 250 мм ворс 18 мм для красок грунтов и антисептиков на водной основе с рукояткой', NULL),
+(N'83M5ME', N'Кисть', N'шт.', 122, N'Armero', N'Armero', N'Ручной инструмент', 9, 26, N'Кисть плоская смешанная щетина 100х12 мм для красок и антисептиков на водной основе', NULL),
+(N'61PGH3', N'Очки защитные', N'шт.', 184, N'KILIMGRIN', N'KILIMGRIN', N'Защита лица, глаз, головы', 6, 25, N'Очки защитные Delta Plus KILIMANDJARO (KILIMGRIN) открытые с прозрачными линзами', NULL),
+(N'GN6ICZ', N'Каска защитная', N'шт.', 154, N'Исток', N'Исток', N'Защита лица, глаз, головы', 15, 8, N'Каска защитная Исток (КАС001О) оранжевая', NULL),
+(N'Z3LO0U', N'Очки защитные', N'шт.', 228, N'RUIZ', N'RUIZ', N'Защита лица, глаз, головы', 9, 11, N'Очки защитные Delta Plus RUIZ (RUIZ1VI) закрытые с прозрачными линзами', NULL),
+(N'QHNOKR', N'Маска защитная', N'шт.', 251, N'Исток', N'Исток', N'Защита лица, глаз, головы', 2, 22, N'Маска защитная Исток (ЩИТ001) ударопрочная и термостойкая', NULL),
+(N'EQ6RKO', N'Подшлемник', N'шт.', 36, N'Husqvarna', N'Husqvarna', N'Защита лица, глаз, головы', 17, 22, N'Подшлемник для каски одноразовый', NULL),
+(N'81F1WG', N'Каска защитная', N'шт.', 1500, N'Delta', N'Delta', N'Защита лица, глаз, головы', 2, 13, N'Каска защитная Delta Plus BASEBALL DIAMOND V UP (DIAM5UPBCFLBS) белая', NULL),
+(N'0YGHZ7', N'Очки защитные', N'шт.', 700, N'Husqvarna', N'Husqvarna', N'Защита лица, глаз, головы', 9, 36, N'Очки защитные Husqvarna Clear (5449638-01) открытые с прозрачными линзами', NULL);
+GO
+
+-- 5.4 Импорт заказов с разбивкой
+CREATE TABLE #TempOrders (
+    OrderNumber INT,
+    ArticleList NVARCHAR(MAX),
+    OrderDate DATETIME,
+    DeliveryDate DATETIME,
+    PickupPointId INT,
+    CustomerFullName NVARCHAR(200),
+    PickupCode NVARCHAR(50),
+    OrderStatus NVARCHAR(50)
+);
+
+INSERT INTO #TempOrders (OrderNumber, ArticleList, OrderDate, DeliveryDate, PickupPointId, CustomerFullName, PickupCode, OrderStatus) VALUES
+(1, N'PMEZMH, 2, BPV4MM, 2', '2025-02-27', '2025-04-20', 1, N'Михайлюк Анна Вячеславовна', N'901', N'Завершен'),
+(2, N'JVL42J, 1, F895RB, 1', '2024-09-28', '2025-04-21', 11, N'Ситдикова Елена Анатольевна', N'902', N'Завершен'),
+(3, N'3XBOTN, 10, 3L7RCZ, 10', '2025-03-21', '2025-04-22', 2, N'Никифорова Весения Николаевна', N'903', N'Завершен'),
+(4, N'S72AM3, 5, 2G3280, 4', '2025-02-20', '2025-04-23', 11, N'Сазонов Руслан Германович', N'904', N'Завершен'),
+(5, N'MIO8YV, 2, UER2QD, 2', '2025-03-17', '2025-04-24', 2, N'Михайлюк Анна Вячеславовна', N'905', N'Завершен'),
+(6, N'ZR70B4, 1, LPDDM4, 1', '2025-03-01', '2025-04-25', 15, N'Ситдикова Елена Анатольевна', N'906', N'Завершен'),
+(7, N'LQ48MW, 10, O43COU8, 10', '2025-02-28', '2025-04-26', 3, N'Никифорова Весения Николаевна', N'907', N'Завершен'),
+(8, N'M26EXW, 5, K0YACK, 4', '2025-03-31', '2025-04-27', 19, N'Сазонов Руслан Германович', N'908', N'Новый'),
+(9, N'ASPXSG, 5, ZKQ5FF, 1', '2025-04-02', '2025-04-28', 5, N'Никифорова Весения Николаевна', N'909', N'Новый'),
+(10, N'4WZEOT, 5, 4JR1HN, 5', '2025-04-03', '2025-04-29', 19, N'Сазонов Руслан Германович', N'910', N'Новый');
+GO
+
+-- Разбор строк
+DECLARE @OrderNumber INT, @ArticleList NVARCHAR(MAX), @OrderDate DATETIME, @DeliveryDate DATETIME,
+        @PickupPointId INT, @CustomerFullName NVARCHAR(200), @PickupCode NVARCHAR(50), @OrderStatus NVARCHAR(50),
+        @UserLogin NVARCHAR(100), @pos INT, @comma INT, @article NVARCHAR(50), @quantity INT;
+
+DECLARE cur CURSOR FOR
+SELECT OrderNumber, ArticleList, OrderDate, DeliveryDate, PickupPointId, CustomerFullName, PickupCode, OrderStatus
+FROM #TempOrders;
+
+OPEN cur;
+FETCH NEXT FROM cur INTO @OrderNumber, @ArticleList, @OrderDate, @DeliveryDate, @PickupPointId, @CustomerFullName, @PickupCode, @OrderStatus;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SELECT @UserLogin = Login FROM Users WHERE FullName = @CustomerFullName;
+    IF @UserLogin IS NULL
+    BEGIN
+        PRINT N'Пользователь не найден: ' + @CustomerFullName;
+        FETCH NEXT FROM cur INTO @OrderNumber, @ArticleList, @OrderDate, @DeliveryDate, @PickupPointId, @CustomerFullName, @PickupCode, @OrderStatus;
+        CONTINUE;
+    END
+
+    SET @ArticleList = @ArticleList + N',';
+    SET @pos = 1;
+    WHILE @pos < LEN(@ArticleList)
+    BEGIN
+        SET @comma = CHARINDEX(N',', @ArticleList, @pos);
+        IF @comma = 0 BREAK;
+        SET @article = LTRIM(RTRIM(SUBSTRING(@ArticleList, @pos, @comma - @pos)));
+        SET @pos = @comma + 1;
+        SET @comma = CHARINDEX(N',', @ArticleList, @pos);
+        IF @comma = 0 BREAK;
+        SET @quantity = TRY_CAST(LTRIM(RTRIM(SUBSTRING(@ArticleList, @pos, @comma - @pos))) AS INT);
+        IF @quantity IS NULL SET @quantity = 0;
+        SET @pos = @comma + 1;
+
+        IF @quantity > 0
+        BEGIN
+            INSERT INTO Orders (UserLogin, OrderDate, DeliveryDate, PickupPointId, Status, PickupCode, ProductArticle, Quantity)
+            VALUES (@UserLogin, @OrderDate, @DeliveryDate, @PickupPointId, @OrderStatus, @PickupCode, @article, @quantity);
+        END
+    END
+
+    FETCH NEXT FROM cur INTO @OrderNumber, @ArticleList, @OrderDate, @DeliveryDate, @PickupPointId, @CustomerFullName, @PickupCode, @OrderStatus;
+END
+
+CLOSE cur;
+DEALLOCATE cur;
+DROP TABLE #TempOrders;
+GO
+
+-- ==================================================
+-- 6. Проверка количества записей
+-- ==================================================
+SELECT 'Users' AS TableName, COUNT(*) AS RowsCount FROM Users
+UNION ALL
+SELECT 'PickupPoints', COUNT(*) FROM PickupPoints
+UNION ALL
+SELECT 'Products', COUNT(*) FROM Products
+UNION ALL
+SELECT 'Orders', COUNT(*) FROM Orders;
+GO
